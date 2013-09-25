@@ -1,6 +1,61 @@
 cssag
 =====
 
-An implementaion of a Multi-Label Classification algorithm on Tree- and DAG-Structured Hierarchies
+An implementaion of a Multi-Label Classification algorithm on Tree- and DAG-Structured Label Hierarchies
 
 See: http://machinelearning.wustl.edu/mlpapers/paper_files/ICML2011Bi_10.pdf for detailed description of the algo.
+
+
+Usage: 
+======
+hierarchicalMultiLabelLearning.py [options]
+
+Options:
+  -h, --help            show this help message and exit
+  -i HIERARCHY, --hierarchy=HIERARCHY
+                        the file with the label hierarchy information: Each
+                        line in the file is <nodeID> <childNodeID1>
+                        <childNodeID2>... <childNodeIDn>
+  -e TESTFILE, --test=TESTFILE
+                        the file for testing in svmlight format
+  -a TRAINFILE, --train=TRAINFILE
+                        the file for training in svmlight format
+  -x TESTLABELS, --test-labels=TESTLABELS
+                        the test labels file: comma separated labels per line
+  -y TRAINLABELS, --train-labels=TRAINLABELS
+                        the train labels file: comma separated labels per line
+  -d DIM, --dim=DIM     number of dimensions in the PCA
+  -t TREE, --tree=TREE  selest AND or OR tree: takes input "and" or "or"
+  -r REGRESSOR, --regressor=REGRESSOR
+                        type of regressor to use: "ridge" or "svr"
+  -p PCA, --pca=PCA     type of pca: "pca"/"kpca"(kernel PCA)/"nopca"(a
+                        regressor is trained on each label)
+
+For example, using the train, test and hierarchy files in this folder,
+
+hierarchicalMultiLabelLearning.py -i hierarchy.dat -e test.svmlight.mini -a train.svmlight.mini -x test.labels.mini -y train.labels.mini 
+
+Notice that these options are the compulsory options, while dimension, pca, tree type and regressor type are optional and if not provided, default values will be used. An example of a complete command:
+
+hierarchicalMultiLabelLearning.py -i hierarchy.dat -e test.svmlight.mini -a train.svmlight.mini -x test.labels.mini -y train.labels.mini -d 100 -t or -r svr -p pca
+
+
+Input file format:
+====================
+The train and test files are in svmlight format. Since it's a multilabel classification problem, the first number in each line(which usually denotes the class the sample belongs to) is meaningless in the svmlight file: so you are needed to give the label information per sample in a corresponding label file, the line n of which represents labels that describe the sample n (or line n) in the corresponding svmlight file. The labels are comma separated.
+
+The hierachy file defines the label hierarchy. Each line has information on a node and its children, which are space separated: <nodeID> <childID1> ... <childIDn> . A line corresponding to a node with no children is: <nodeID> . 
+
+See included example files.
+
+Other options:
+==============
+Please see the original paper for these variables:
+
+DIM defines the dimension of the PCA that maps the trainspace to a lower dimensional space.
+
+The TREE option defines whether the inherent hierarchy conforms to the AND-G property or the OR-G property defined in the paper.
+
+Regressor to train the DIM number of reduced dimensions: can be either ridge regression or support-vector regresson
+
+PCA: If you want to follow the paper religiously, then 'kpca' option is what you are looking for. To compare the results to other possible modifications, I have also included 'pca' and 'nopca' options. The 'pca' option follows Tai & Lin(2010)(as mentioned in this paper) and performs PCA directly on label vectors where are the 'kpca' uses kernel PCA on a transformed feature vector set. Using 'nopca' would mean no transformation to lower dimension is implemented and a regressor is trained for each label in the hierarchy.

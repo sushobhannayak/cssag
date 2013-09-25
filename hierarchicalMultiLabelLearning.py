@@ -91,24 +91,8 @@ def getProjectionMatrixKPCA(dim=50):
     return kpca, kpca.alphas_
     
 def getProjectionMatrixPCA(Y, dim=50):
-    # Update Y so that it has a 1 at every ancestor for a child which is 1
-    Y_new = np.zeros(Y.shape)
-
-    # Create reverse index table
-    reverseIndex = {}
-    for item in labelIndex:
-        reverseIndex[labelIndex[item]] = item
-
-    for i in range(Y_new.shape[0]):
-        for j in range(Y_new.shape[1]):
-            if Y[i][j] != 1: continue
-            ancestor = getPathToRoot(reverseIndex[j])
-            for x in ancestor:
-                Y_new[i][labelIndex[x]] = 1
-
-    
     pca = PCA(n_components=dim)
-    pca.fit(Y_new)
+    pca.fit(Y)
     return pca, pca.components_
 
 def simpleTraining(X,Y,X_test, regressor='ridge'):
@@ -278,6 +262,7 @@ def populateY(X, Y, labelFile):
     for line in open(labelFile):
         labels = line.strip().split(',')
         for label in labels:
+            label = label.strip()
             Y[idx][labelIndex[label]] = 1
         idx += 1
     print 'reached to idx: ', idx
@@ -324,20 +309,20 @@ if __name__ == '__main__':
 
     # Set up input parsing
     parser = OptionParser()
-    parser.add_option('-i', '--hierarchy', dest='hierarchy', help='the file with the label hierarchy information: Each line in the file is <nodeID> <childNodeID1> <childNodeID2> ', type='str')
-    parser.add_option('-e', '--test', dest='testfile', help='the test file', type='str')
-    parser.add_option('-a', '--train', dest='trainfile', help='the train file', type='str')
+    parser.add_option('-i', '--hierarchy', dest='hierarchy', help='the file with the label hierarchy information: Each line in the file is <nodeID> <childNodeID1> <childNodeID2>... <childNodeIDn>', type='str')
+    parser.add_option('-e', '--test', dest='testfile', help='the file for testing in svmlight format', type='str')
+    parser.add_option('-a', '--train', dest='trainfile', help='the file for training in svmlight format', type='str')
     parser.add_option('-x', '--test-labels', dest='testlabels', help='the test labels file: comma separated labels per line', type='str')
     parser.add_option('-y', '--train-labels', dest='trainlabels', help='the train labels file: comma separated labels per line', type='str')
-    parser.add_option('-d', '--dim', dest='dim', type='int', help='number of dimensions in the pca')
+    parser.add_option('-d', '--dim', dest='dim', type='int', help='number of dimensions in the PCA')
     parser.add_option('-t', '--tree', dest='tree', type='str', help='selest AND or OR tree: takes input "and" or "or"')
     parser.add_option('-r', '--regressor', dest='regressor', type='str', help='type of regressor to use: "ridge" or "svr"')
-    parser.add_option('-p', '--pca', dest='pca', type='str', help='type of pca: "pca"/"kpca"/"nopca"')
+    parser.add_option('-p', '--pca', dest='pca', type='str', help='type of pca: "pca"/"kpca"(kernel PCA)/"nopca"(a regressor is trained on each label)')
 
     (options, args) = parser.parse_args()
 
 
-    pca = options.pca if options.pca != None else 'pca'
+    pca = options.pca if options.pca != None else 'kpca'
     regressor = options.regressor if options.regressor != None else 'ridge'
     dim = options.dim if options.dim != None else 50
     tree = options.tree if options.tree != None else 'or'
