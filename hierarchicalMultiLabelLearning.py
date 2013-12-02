@@ -269,18 +269,22 @@ def populateY(X, Y, labelFile):
     if idx != X.shape[0]: print 'Possible Errorrrrrrrrrrrrrrrrrrrrrrrrrr....\n\n\n'
     return Y
     
-def prepareDataset(trainfile, trainlabels, testfile, testlabels):
+#def prepareDataset(trainfile, trainlabels, testfile, testlabels):
+def prepareDataset(trainfile, testfile):
     """ Prepare train and test sets from input files """
-    X, y_train = load_svmlight_file(trainfile)
-    X_test, y_test = load_svmlight_file(testfile, n_features=X.shape[1])
+    #X, y_train = load_svmlight_file(trainfile)
+    #X_test, y_test = load_svmlight_file(testfile, n_features=X.shape[1])
 
-    Y = np.zeros([X.shape[0],len(labelIndex)])
-    Y_test = np.zeros([X_test.shape[0],len(labelIndex)])
+    #Y = np.zeros([X.shape[0],len(labelIndex)])
+    #Y_test = np.zeros([X_test.shape[0],len(labelIndex)])
 
-    Y = populateY(X, Y, trainlabels)
-    Y_test = populateY(X_test, Y_test, testlabels)
+    #Y = populateY(X, Y, trainlabels)
+    #Y_test = populateY(X_test, Y_test, testlabels)
 
-    return X, Y, X_test, Y_test
+	X, Y = load_svmlight_file(trainfile, multilabel = True)
+	num_features = X.shape[1]
+	X_test, Y_test = load_svmlight_file(testfile, n_features = num_features, multilabel = True)
+	return X, Y, X_test, Y_test
 
 def pres_rec_f1(Y_true, Y_preds_list):
     """ Calculates micro, macro and sample averaged metrics for the classification task"""
@@ -312,8 +316,8 @@ if __name__ == '__main__':
     parser.add_option('-i', '--hierarchy', dest='hierarchy', help='the file with the label hierarchy information: Each line in the file is <nodeID> <childNodeID1> <childNodeID2>... <childNodeIDn>', type='str')
     parser.add_option('-e', '--test', dest='testfile', help='the file for testing in svmlight format', type='str')
     parser.add_option('-a', '--train', dest='trainfile', help='the file for training in svmlight format', type='str')
-    parser.add_option('-x', '--test-labels', dest='testlabels', help='the test labels file: comma separated labels per line', type='str')
-    parser.add_option('-y', '--train-labels', dest='trainlabels', help='the train labels file: comma separated labels per line', type='str')
+#    parser.add_option('-x', '--test-labels', dest='testlabels', help='the test labels file: comma separated labels per line', type='str')
+#    parser.add_option('-y', '--train-labels', dest='trainlabels', help='the train labels file: comma separated labels per line', type='str')
     parser.add_option('-d', '--dim', dest='dim', type='int', help='number of dimensions in the PCA')
     parser.add_option('-t', '--tree', dest='tree', type='str', help='selest AND or OR tree: takes input "and" or "or"')
     parser.add_option('-r', '--regressor', dest='regressor', type='str', help='type of regressor to use: "ridge" or "svr"')
@@ -331,7 +335,8 @@ if __name__ == '__main__':
     preliminaries(options.hierarchy)
     
     # Prepare dataset    
-    X, Y, X_test, Y_test = prepareDataset(options.trainfile, options.trainlabels, options.testfile, options.testlabels)
+    #X, Y, X_test, Y_test = prepareDataset(options.trainfile, options.trainlabels, options.testfile, options.testlabels)
+    X, Y, X_test, Y_test = prepareDataset(options.trainfile, options.testfile)
 
     # Train and get prediction
     print 'training model.......pca: ', pca, 'regressor: ', regressor, 'dim: ', dim, 'tree: ', tree
